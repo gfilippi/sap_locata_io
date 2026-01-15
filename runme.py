@@ -95,6 +95,7 @@ def main():
 
     print("\nExecuting Octave command:")
     print(" ".join(shlex.quote(c) for c in full_cmd))
+    print("\n==============================================\n")
 
     # Run Octave
     subprocess.run(full_cmd, check=True)

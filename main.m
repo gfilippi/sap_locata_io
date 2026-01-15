@@ -186,7 +186,14 @@ for task_idx = 1:length(tasks)
             this_array = array_names{arr_idx};
             array_dir = [rec_dir filesep array_names{arr_idx}];
 
-            fprintf('Processing task %d, recording %d, array %s...\n', this_task, this_recording, this_array);
+            task_list = { "single-speaker-static_single-array-static",
+                          "multiple-speaker-static_single-array-static",
+                          "single-speaker-moving_single-array-static",
+                          "multiple-speaker-moving_single-array_static",
+                          "single-speaker-moving_single-array-moving",
+                          "multiple-speaker-moving_single-array-moving"};
+
+            fprintf('Processing task %d (%s), recording %d, array %s...\n', this_task, task_list{this_task}, this_recording, this_array);
 
             %% Load data
 
