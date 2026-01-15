@@ -65,8 +65,6 @@ function main(data_dir, results_dir, is_dev, arrays, tasks)
 % OF THE POSSIBILITY OF SUCH DAMAGES.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pkg load parallel
-
 % Add matlab directory and sub-folders to path:
 addpath(genpath('./'))
 
@@ -140,18 +138,6 @@ fprintf('Available tasks in the dev dataset in %s: %s\n\n', data_dir, mat2str(ta
 % Evaluation of the localization algorithm (e.g., MUSIC)
 % for each recording of the specified tasks and arrays
 
-p_idx = 0;
-p_results_task_dir = {};
-p_array_names = {};
-p_recordings = {};
-p_arr_idx = {};
-p_rec_idx = {};
-p_task_dir={};
-p_rec_dir={};
-p_tasks={};
-p_task_idx={};
-
-
 % Parse through all specified task folders
 for task_idx = 1:length(tasks)
     this_task = tasks(task_idx);
@@ -195,35 +181,101 @@ for task_idx = 1:length(tasks)
 
         % array_names = unique(intersect(array_names, opts.valid_arrays));
         array_names = unique(intersect(array_names, arrays));
-
-
-        % collect data structure for parallel processing
+        
         for arr_idx = 1 : length(array_names)
-            p_idx+=1;
-            p_task_idx{p_idx}=task_idx;
-            p_task_dir{p_idx}=task_dir;
-            p_rec_dir{p_idx}=rec_dir;
-            p_arr_idx{p_idx} = arr_idx;
-            p_rec_idx{p_idx} = rec_idx;
-            p_tasks{p_idx}=tasks;
-            p_recordings{p_idx} = recordings;
-            p_array_names{p_idx} = array_names;
-            p_results_task_dir(p_idx)=results_task_dir;
+            this_array = array_names{arr_idx};
+            array_dir = [rec_dir filesep array_names{arr_idx}];
 
+            task_list = { "single-speaker-static_single-array-static",
+                          "multiple-speaker-static_single-array-static",
+                          "single-speaker-moving_single-array-static",
+                          "multiple-speaker-moving_single-array_static",
+                          "single-speaker-moving_single-array-moving",
+                          "multiple-speaker-moving_single-array-moving"};
+
+            fprintf('Processing task %d (%s), recording %d, array %s...\n', this_task, task_list{this_task}, this_recording, this_array);
+
+            %% Load data
+
+            % Load data from csv / wav files in database:
+            fprintf('Loading data for task %d, recording %d... ', this_task, this_recording)
+            if is_dev
+                [audio_array, audio_source, position_array, position_source, required_time] = load_data(array_dir, is_dev);
+            else
+                [audio_array, position_array, required_time] = load_data(array_dir, is_dev);
+            end
+            fprintf('Complete!\n\n')
+
+            % Create directory for this array in results directory:
+            this_save_dir = [results_task_dir, filesep, 'recording', num2str(this_recording), filesep, this_array, filesep];
+            if ~exist(this_save_dir, 'dir')
+                mkdir(this_save_dir)
+            end
+
+            %% Load signal
+
+            % Get number of mics and mic array geometry:
+            in_localization.numMics = size(position_array.data.(this_array).mic,3);
+
+            % Signal and sampling frequency:
+            in_localization.y = audio_array.data.(this_array)';      % signal
+            in_localization.fs = audio_array.fs;                     % sampling freq
+
+            %% Users must provide estimates for each time stamp in in.timestamps
+
+            % Time stamps required for evaluation
+            in_localization.timestamps = elapsed_time(required_time.time);
+            in_localization.timestamps = in_localization.timestamps(find(required_time.valid_flag));
+            in_localization.time = required_time.time(:,find(required_time.valid_flag));
+
+            %% Extract ground truth
+            %
+            % position_array stores all optitrack measurements.
+            % Extract valid measurements only (specified by required_time.valid_flag).
+
+            if is_dev
+                truth = get_truth(this_array, position_array, position_source, required_time, is_dev);
+            else
+                truth = get_truth(this_array, position_array, [], required_time, is_dev);
+            end
+
+            %% Separate ground truth into positions of arrays (used for localization) and source position (used fo metrics)
+
+            in_localization.array = truth.array;
+            in_localization.array_name = this_array;
+            in_localization.mic_geom = truth.array.mic;
+
+            fprintf('...Running localization using %s... ', my_alg_name)
+            tic;
+            results = feval( my_alg_name, in_localization, opts);
+            results.telapsed = toc;
+            fprintf('Complete!\n')
+
+            %% Check results structure is provided in correct format
+
+            check_results(results, in_localization, opts);
+
+            %% Plots & Save results to file
+
+            fprintf('...Saving results to file... ')
+
+            % Directory to save figures to:
+            in_plots = in_localization;
+            in_plots.results_dir = [this_save_dir, filesep, my_alg_name];
+            if ~exist(in_plots.results_dir, 'dir')
+                mkdir(in_plots.results_dir)
+            end
+            in_plots.plot_title = ['Task ', num2str(tasks(task_idx)), ', recording ', num2str(recordings(rec_idx)), ', array: ', this_array];
+            plot_results( in_plots, results, opts, truth, is_dev);
+
+            in_save.struct = results;
+            in_save.save_dir = in_plots.results_dir;
+            results2csv(in_save, opts);
+
+            fprintf('Complete!\n\n')
         end
-
     end
 end
-
-disp('Processing started!')
-nproc = 32
-
-out = pararrayfun(
-    nproc, 
-    @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-    1:p_idx
-);
-
 disp('Processing finished!')
-end
 
+end
