@@ -16,6 +16,9 @@ function writetable(T, filename, varargin)
       switch lower(varargin{k})
           case 'delimiter'
               delimiter = varargin{k+1};
+              if strcmp(delimiter, '\t')
+                  delimiter = sprintf('\t');
+              end
           otherwise
               error('Unknown parameter %s', varargin{k});
       end
@@ -35,6 +38,13 @@ function writetable(T, filename, varargin)
   firstField = T.(fields{1});
   nrows = numel(firstField);
 
+  % check for consistency
+  for k = 1:numel(fields)
+    if numel(T.(fields{k})) ~= nrows
+        error('writetable: column "%s" has inconsistent length', fields{k});
+    end
+  end
+
   % Open file for writing
   fid = fopen(filename, 'w');
   if fid < 0
@@ -52,25 +62,29 @@ function writetable(T, filename, varargin)
   for i = 1:nrows
       for k = 1:numel(fields)
           col = T.(fields{k});
-          val = col(i);
 
+          % --- Extract scalar value safely ---
           if iscell(col)
-              % Strings or mixed data
               val = col{i};
+          elseif isstring(col)
+              val = char(col(i));
+          else
+              val = col(i);
           end
 
+          % --- Print value ---
           if isnumeric(val)
               fprintf(fid, '%g', val);
           elseif islogical(val)
               fprintf(fid, '%d', val);
-          elseif ischar(val) || isstring(val)
+          elseif ischar(val)
               fprintf(fid, '%s', val);
           else
-              % fallback: convert to string
               fprintf(fid, '%s', mat2str(val));
           end
 
-          if k ~= numel(fields)
+          % --- Print delimiter BETWEEN columns ---
+          if k < numel(fields)
               fprintf(fid, '%s', delimiter);
           end
       end
@@ -78,4 +92,3 @@ function writetable(T, filename, varargin)
   end
 
   fclose(fid);
-end

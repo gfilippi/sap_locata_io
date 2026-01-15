@@ -69,28 +69,55 @@ for src_idx = 1 : length(results.struct.source)
     this_array = results2tablestruct( results.struct.source(src_idx) );
 
     % Write to Table and rename headers
-    this_table = struct2table(this_array);
-    writetable(this_table, [results.save_dir, filesep, 'source_', num2str(src_idx)], 'Delimiter', '\t');
+    %this_table = struct2table(this_array);
+    %writetable(this_table, [results.save_dir, filesep, 'source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
+
+    % octave
+    writetable(this_array, [results.save_dir, filesep, 'source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
+
+
 
     clear this_array this_table
 end
 
 end
 
-function this_struct = results2tablestruct( in )
+
+
+
+function this_struct = results2tablestruct(in)
+
+this_struct = struct();   % always initialize
 
 fields = fieldnames(in);
-for f_idx =1 : length(fields)
-    if ~strcmp(fields{f_idx} , 'time') && ~isempty(in.(fields{f_idx}))
-        this_struct.(fields{f_idx}) = in.(fields{f_idx})';
-    else
-        this_struct.year = in.time(1,:)';
-        this_struct.month = in.time(2,:)';
-        this_struct.day = in.time(3,:)';
-        this_struct.hour = in.time(4,:)';
-        this_struct.minute = in.time(5,:)';
-        this_struct.second = in.time(6,:)';
+
+% --- Handle non-time fields ---
+for f_idx = 1:numel(fields)
+    fname = fields{f_idx};
+
+    if strcmp(fname, 'time')
+        continue;
     end
+
+    if isempty(in.(fname))
+        continue;
+    end
+
+    % Force column vector
+    this_struct.(fname) = in.(fname)(:);
+end
+
+% --- Handle time field ONCE ---
+if isfield(in, 'time') && ~isempty(in.time)
+    this_struct.year   = in.time(1,:).';
+    this_struct.month  = in.time(2,:).';
+    this_struct.day    = in.time(3,:).';
+    this_struct.hour   = in.time(4,:).';
+    this_struct.minute = in.time(5,:).';
+    this_struct.second = in.time(6,:).';
 end
 
 end
+
+
+fclose(fid);
