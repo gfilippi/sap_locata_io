@@ -1,5 +1,4 @@
 function out = MUSIC(in, opts)
-
 % function out = MUSIC(in, opts)
 % implementation of Multiple SIgnal Classification (MUSIC) algorithm as described in [3].
 %
@@ -67,6 +66,8 @@ function out = MUSIC(in, opts)
 % THIS LICENSE OR THE USE OF THE WORK, EVEN IF LICENSOR HAS BEEN ADVISED
 % OF THE POSSIBILITY OF SUCH DAMAGES.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+pkg load image
 
 az = -pi:deg2rad(5):pi;           % Azimuth - note that this is denoted as el in [2]
 
