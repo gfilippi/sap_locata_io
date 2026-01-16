@@ -1,4 +1,4 @@
-function out = MUSIC(in, opts)
+function out = MUSIC(idx, in, opts)
 % function out = MUSIC(in, opts)
 % implementation of Multiple SIgnal Classification (MUSIC) algorithm as described in [3].
 %
@@ -101,6 +101,8 @@ end
 
 numMic = length(subarray);
 
+fprintf("[%03d] MUSIC start \n",idx)
+
 fftPoint = 1024;
 frame_duration = 0.03;
 frames_per_block = 100;                     	% Number of frames per block
@@ -143,6 +145,9 @@ valid_freq_idx = f > 800 & f < 1400;
 valid_freqs = f(valid_freq_idx);
 valid_X = X(:,valid_freq_idx,:);
 
+fprintf("[%03d] MUSIC autocorrelation \n",idx)
+block_idx_prev = -100;
+
 power = zeros(fftPoint/2-1, length(az), length(el), nblocks);
 for block_idx = 1 : nblocks
     for freq_idx = 1:length(valid_freqs)%1 : fftPoint/2-1
@@ -163,6 +168,12 @@ for block_idx = 1 : nblocks
             % [3] eq. (9.37), using spectral sparsity assumption:
             % Signal subspace is 1 dimensional if 1 source is active, hence D = 1
             Un = U(:,2:end);
+
+            % log progress
+            if ( (100*((block_idx-block_idx_prev)/nblocks)) ) > 5 
+                fprintf("[%03d] MUSIC autocorr compute (%2.2f %%)\n",idx, 100*block_idx/nblocks)
+                block_idx_prev = block_idx;
+            end
 
             % Power for each az/el grid point:
             for az_idx = 1 : length(az)
@@ -186,6 +197,7 @@ for block_idx = 1 : nblocks
     end
 end
 
+
 % Sum spectra over all frequencies:
 spectrum = zeros( nblocks, length(az), length(el) );
 for block_idx = 1 : nblocks
@@ -195,6 +207,7 @@ end
 %% Find DOA
 %
 % NOTE: Single-source assumption
+fprintf("[%03d] MUSIC DoA \n",idx)
 
 azimuth = nan(1,nblocks);
 elevation = nan(1,nblocks);
@@ -235,6 +248,8 @@ interp_elevation = interp1(block_timestamps, elevation, in.timestamps);
 % MUSIC estimates single source only:
 N_sources = 1;
 
+fprintf("[%03d] MUSIC interpolate\n",idx)
+
 for src_idx = 1 : N_sources
     % Initialize so all fields exist but are empty if not used / applicable
     for f_idx = 1 : length(opts.valid_results)
@@ -249,5 +264,7 @@ for src_idx = 1 : N_sources
     out.source(src_idx).time = in.time;
     out.source(src_idx).timestamps = in.timestamps;
 end
+
+fprintf("[%03d] MUSIC done. \n",idx)
 
 end

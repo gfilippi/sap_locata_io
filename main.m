@@ -216,7 +216,10 @@ for task_idx = 1:length(tasks)
 end
 
 fprintf('Processing started, total tasks:%d \n',p_idx)
-nproc = 8 % tot proc/2
+
+% note: threadripper 48 cores, 128G ram, using TOT_CORES/2
+
+nproc = 24 % tot proc/2
 
 
 N = p_idx;             % total number of items

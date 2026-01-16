@@ -91,7 +91,7 @@ function [r]=data_processing(p_idx, p_task_idx, p_tasks, p_task_dir, p_rec_dir, 
 
     fprintf('[%03d] Running localization using %s... \n', p_idx, my_alg_name)
     tic;
-    results = feval( my_alg_name, in_localization, opts);
+    results = feval( my_alg_name, p_idx, in_localization, opts);
     results.telapsed = toc;
     fprintf('[%03d] Localization Complete!\n')
 
