@@ -226,4 +226,8 @@ if is_dev
 
 end
 
+
+close(fig_hdls);
+clear fig_hdls;
+
 end

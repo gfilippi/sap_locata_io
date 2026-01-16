@@ -118,6 +118,14 @@ function [r]=data_processing(p_idx, p_task_idx, p_tasks, p_task_dir, p_rec_dir, 
 
     fprintf('[%03d] Saving Complete!\n',p_idx)
 
+
+    clear largeArray largeStruct;
+    close all;
+
     r=1;
+
+
+    fprintf('[%03d] Data Processing Complete!\n',p_idx)
+
 
 end

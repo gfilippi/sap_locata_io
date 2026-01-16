@@ -215,14 +215,52 @@ for task_idx = 1:length(tasks)
     end
 end
 
-disp('Processing started!')
-nproc = 32
+fprintf('Processing started, total tasks:%d \n',p_idx)
+nproc = 8 % tot proc/2
 
-out = pararrayfun(
-    nproc, 
-    @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-    1:p_idx
-);
+
+N = p_idx;             % total number of items
+chunk_size = nproc;    % size of each chunk
+
+idx = randperm(N);
+
+for start_idx = 1:chunk_size:N
+    end_idx = min(start_idx+chunk_size-1, N);
+
+    % ---- do work on this chunk ----
+    disp(['Processing indices: ', mat2str(idx(start_idx:end_idx))]);
+
+    pararrayfun(
+        nproc, 
+        @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
+        idx(start_idx:end_idx)
+    );
+
+end
+
+
+% for start_idx = 1:chunk_size:N
+%     end_idx = min(start_idx + chunk_size - 1, N);
+
+%     idx_chunk = start_idx:end_idx;
+
+%     % ---- do work on this chunk ----
+%     disp(['Processing indices: ', mat2str(idx_chunk)]);
+
+%     out = pararrayfun(
+%         nproc, 
+%         @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
+%         idx_chunk
+%     );
+
+% end
+
+
+% pararrayfun(
+%     nproc, 
+%     @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
+%     1:p_idx
+% );
 
 disp('Processing finished!')
 end
