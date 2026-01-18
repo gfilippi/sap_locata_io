@@ -233,6 +233,12 @@ for start_idx = 1:chunk_size:N
     % ---- do work on this chunk ----
     disp(['Processing indices: ', mat2str(idx(start_idx:end_idx))]);
 
+    %% SERIAL EXEC for debug 
+    % for z = start_idx:end_idx
+    %    data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
+    % end
+
+    %% PARALLEL EXEC
     pararrayfun(
         nproc, 
         @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
@@ -241,29 +247,6 @@ for start_idx = 1:chunk_size:N
 
 end
 
-
-% for start_idx = 1:chunk_size:N
-%     end_idx = min(start_idx + chunk_size - 1, N);
-
-%     idx_chunk = start_idx:end_idx;
-
-%     % ---- do work on this chunk ----
-%     disp(['Processing indices: ', mat2str(idx_chunk)]);
-
-%     out = pararrayfun(
-%         nproc, 
-%         @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-%         idx_chunk
-%     );
-
-% end
-
-
-% pararrayfun(
-%     nproc, 
-%     @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-%     1:p_idx
-% );
 
 disp('Processing finished!')
 end

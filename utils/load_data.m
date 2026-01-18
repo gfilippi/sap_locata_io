@@ -1,4 +1,4 @@
-function varargout = load_data(dir_name, is_dev)
+function varargout = load_data(dir_name, is_dev, p_idx)
 
 % function [audio_array, audio_source, position_array, position_source, required_time] = load_data(dir_name)
 % loads LOCATA csv and wav data in Matlab
@@ -59,6 +59,8 @@ txt_table = readtable([dir_name filesep 'required_time.txt']);
 txt_struct = table2struct(txt_table);
 required_time = struct2time(txt_struct);
 
+fprintf('[%03d] Load Data: AUDIO FILES\n',p_idx)
+
 % Audio files:
 wav_fnames = dir([dir_name, filesep, '*.wav']);
 audio_array_idx = ~cellfun(@isempty, regexp({wav_fnames.name}, 'audio_array'));
@@ -74,6 +76,8 @@ else
     end
 end
 
+fprintf('[%03d] Load Data: AUDIO ARRAY, source (%s)\n',p_idx,fullfile(dir_name, wav_fnames(1).name))
+
 % Audio array data:
 audio_array_idx = find(audio_array_idx);
 audio_array = load_wav(wav_fnames, audio_array_idx, 'audio_array');
@@ -85,12 +89,18 @@ if is_dev
     audio_source.NS = numel(fieldnames(audio_source.data));
 end
 
+
 % Position source data:
 txt_fnames = dir([dir_name, filesep, '*.txt']);
+
+fprintf('[%03d] Load Data: AUDIO ARRAY, position_source (%s)\n',p_idx,txt_fnames(1).name)
+
 if is_dev
     position_source_idx = find(~cellfun(@isempty, regexp({txt_fnames.name}, 'position_source')));
     position_source = load_txt(txt_fnames, position_source_idx, 'position_source');
 end
+
+fprintf('[%03d] Load Data: AUDIO ARRAY, position_array (%s)\n',p_idx,txt_fnames(1).name)
 
 % Position array data:
 position_array_idx = find(~cellfun(@isempty, regexp({txt_fnames.name}, 'position_array')));

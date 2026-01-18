@@ -43,9 +43,9 @@ function [r]=data_processing(p_idx, p_task_idx, p_tasks, p_task_dir, p_rec_dir, 
     % Load data from csv / wav files in database:
     fprintf('[%03d] Loading data for task %d, recording %d... \n', p_idx, this_task, this_recording)
     if is_dev
-        [audio_array, audio_source, position_array, position_source, required_time] = load_data(array_dir, is_dev);
+        [audio_array, audio_source, position_array, position_source, required_time] = load_data(array_dir, is_dev, p_idx);
     else
-        [audio_array, position_array, required_time] = load_data(array_dir, is_dev);
+        [audio_array, position_array, required_time] = load_data(array_dir, is_dev, p_idx);
     end
     fprintf('[%03d] Load Data Complete!\n',p_idx)
     
@@ -114,7 +114,8 @@ function [r]=data_processing(p_idx, p_task_idx, p_tasks, p_task_dir, p_rec_dir, 
 
     in_save.struct = results;
     in_save.save_dir = in_plots.results_dir;
-    results2csv(in_save, opts);
+
+    results2csv(in_save, opts, p_idx, p_task_idx, p_rec_idx);
 
     fprintf('[%03d] Saving Complete!\n',p_idx)
 

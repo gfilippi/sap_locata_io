@@ -1,4 +1,4 @@
-function results2csv( results, opts )
+function results2csv( results, opts, p_idx, p_task_idx, p_rec_idx)
 
 % function results2csv( results, opts )
 % converts results structure to csv file for LOCATA submission.
@@ -70,10 +70,10 @@ for src_idx = 1 : length(results.struct.source)
 
     % Write to Table and rename headers
     %this_table = struct2table(this_array);
-    %writetable(this_table, [results.save_dir, filesep, 'source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
+    %writetable(this_table, [results.save_dir, filesep, 'task_', num2str(p_task_idx{p_idx}),'_recording_',num2str(p_rec_idx{p_idx}),'_source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
 
     % octave
-    writetable(this_array, [results.save_dir, filesep, 'source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
+    writetable(this_array, [results.save_dir, filesep, 'task_', num2str(p_task_idx{p_idx}),'_recording_',num2str(p_rec_idx{p_idx}),'source_', num2str(src_idx), '.tsv'], 'Delimiter', '\t');
 
 
 
