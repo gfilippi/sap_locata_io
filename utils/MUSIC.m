@@ -145,10 +145,13 @@ valid_freq_idx = f > 800 & f < 1400;
 valid_freqs = f(valid_freq_idx);
 valid_X = X(:,valid_freq_idx,:);
 
-fprintf("[%03d] MUSIC autocorrelation \n",idx)
+fprintf("[%03d] MUSIC autocorrelation on blocks=%d \n",idx,nblocks)
 block_idx_prev = -100;
 
+t_start=time();
+
 power = zeros(fftPoint/2-1, length(az), length(el), nblocks);
+
 for block_idx = 1 : nblocks
     for freq_idx = 1:length(valid_freqs)%1 : fftPoint/2-1
         % Block of FFT frames:
@@ -170,9 +173,12 @@ for block_idx = 1 : nblocks
             Un = U(:,2:end);
 
             % log progress
-            if ( (100*((block_idx-block_idx_prev)/nblocks)) ) > 5 
-                fprintf("[%03d] MUSIC autocorr compute (%2.2f %%)\n",idx, 100*block_idx/nblocks)
+            if ( (100*((block_idx-block_idx_prev)/nblocks)) ) > 5
+                t_stop = time();
+                dt_ms = (t_stop - t_start); 
+                fprintf("[%03d] MUSIC autocorr compute %d/%d (%2.2f blocks/s) (az_len=%d, el_len=%d)\n",idx, block_idx, nblocks, block_idx/dt_ms, length(az), length(el) )
                 block_idx_prev = block_idx;
+                t_start = t_stop;
             end
 
             % Power for each az/el grid point:

@@ -196,7 +196,6 @@ for task_idx = 1:length(tasks)
         % array_names = unique(intersect(array_names, opts.valid_arrays));
         array_names = unique(intersect(array_names, arrays));
 
-
         % collect data structure for parallel processing
         for arr_idx = 1 : length(array_names)
             p_idx+=1;
@@ -217,35 +216,107 @@ end
 
 fprintf('Processing started, total tasks:%d \n',p_idx)
 
+
 % note: threadripper 48 cores, 128G ram, using TOT_CORES/2
-
-nproc = 24 % tot proc/2
-
-
 N = p_idx;             % total number of items
-chunk_size = nproc;    % size of each chunk
 
-idx = randperm(N);
+% search for audio files in folders
+tmp_array={};
+for z = 1:N
+    rec_dir = p_rec_dir{z};
+    array_names = p_array_names{z};
+    array_dir = [rec_dir filesep array_names{arr_idx}];
 
-for start_idx = 1:chunk_size:N
-    end_idx = min(start_idx+chunk_size-1, N);
 
-    % ---- do work on this chunk ----
-    disp(['Processing indices: ', mat2str(idx(start_idx:end_idx))]);
+    wav_fnames = dir([array_dir, filesep, '*.wav']);
+    audio_array_idx = ~cellfun(@isempty, regexp({wav_fnames.name}, 'audio_array'));
+    audio_array_idx = find(audio_array_idx);
+
+    % fprintf("%s/%s %3.1f\n",wav_fnames(audio_array_idx).folder,wav_fnames(audio_array_idx).name, wav_fnames(audio_array_idx).statinfo.size/(1024*1024))
+    tmp_array{z} = [z, wav_fnames(audio_array_idx).statinfo.size/(1024*1024)];
+end
+
+% sort indexes bases on audio recoding size
+vals = cellfun(@(x) x(2), tmp_array);
+
+% sort indexes for size ascending order
+[~, idx] = sort(vals, 'descend');
+
+recording_array = tmp_array(idx);
+
+% groups based on file size and tot limit
+group_size_limit = 800 % to be calibrated based on processing memory usage
+group_count_limit =  24 % tot proc/2
+
+vals = cellfun(@(x)x(2), recording_array);
+idxs = cellfun(@(x)x(1), recording_array);
+
+ranges = {};
+current_sum = 0;
+start_idx = 1;
+core_sum = 1;
+
+for i = 1:numel(vals)
+    if and( (current_sum + vals(i) < group_size_limit), (core_sum < group_count_limit))
+        core_sum +=1;
+        current_sum += vals(i);
+    else
+        ranges{end+1} = idxs(start_idx:(i-1));
+        start_idx = i;
+        current_sum = vals(i);
+        core_sum=1;
+    end
+end
+
+ranges{end+1} = idxs(start_idx:numel(idxs));
+
+
+% execute data processing calls in parallel, re-ordered as partitioned
+for range_idx = ranges
+    nproc = length(idx);
+
+    idx = range_idx{1};
+    disp(['Processing indices: ', mat2str(idx)]);
 
     %% SERIAL EXEC for debug 
     % for z = start_idx:end_idx
     %    data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
     % end
 
-    %% PARALLEL EXEC
+    % PARALLEL EXEC
     pararrayfun(
         nproc, 
         @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-        idx(start_idx:end_idx)
+        idx
     );
 
 end
+
+% nproc = 4 % tot proc/2
+% chunk_size = nproc;    % size of each chunk
+
+% sort indexes for random order
+% idx = randperm(N);
+
+% for start_idx = 1:chunk_size:N
+%     end_idx = min(start_idx+chunk_size-1, N);
+
+%     % ---- do work on this chunk ----
+%     disp(['Processing indices: ', mat2str(idx(start_idx:end_idx))]);
+
+%     %% SERIAL EXEC for debug 
+%     % for z = start_idx:end_idx
+%     %    data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
+%     % end
+
+%     % PARALLEL EXEC
+%     % pararrayfun(
+%     %     nproc, 
+%     %     @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
+%     %     idx(start_idx:end_idx)
+%     % );
+
+% end
 
 
 disp('Processing finished!')
