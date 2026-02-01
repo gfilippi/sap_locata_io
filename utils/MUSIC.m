@@ -174,7 +174,7 @@ for block_idx = 1 : nblocks
             if ( (100*((block_idx-block_idx_prev)/nblocks)) ) > 5
                 t_stop = posixtime(datetime('now'));
                 dt_ms = (t_stop - t_start); 
-                fprintf("[%03d] MUSIC autocorr compute %d/%d (%2.2f blocks/s) (az_len=%d, el_len=%d)\n",idx, block_idx, nblocks, block_idx/dt_ms, length(az), length(el) )
+                fprintf("[%03d] MUSIC autocorr compute %d/%d (%2.2f blocks/s) (az_len=%d, el_len=%d)\n",idx, block_idx, nblocks, (block_idx - block_idx_prev)/dt_ms, length(az), length(el) )
                 block_idx_prev = block_idx;
                 t_start = t_stop;
             end
