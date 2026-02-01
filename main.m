@@ -207,7 +207,7 @@ for task_idx = 1:length(tasks)
             p_tasks{p_idx}=tasks;
             p_recordings{p_idx} = recordings;
             p_array_names{p_idx} = array_names;
-            p_results_task_dir(p_idx)=results_task_dir;
+            p_results_task_dir{p_idx}=results_task_dir;
 
         end
 
