@@ -86,18 +86,23 @@ def main():
         f"{arrays_matlab}, {tasks_matlab});"
     )
 
+    matlab_cmd = (
+        "try, "
+        + octave_cmd +
+        " catch ME, disp(getReport(ME)), exit(1), end, exit(0);"
+    )
+
     full_cmd = [
-        "octave",
-        "--quiet",
-        "--eval",
-        octave_cmd
+        "matlab",
+        "-batch",
+        matlab_cmd
     ]
 
     print("\nExecuting Octave command:")
     print(" ".join(shlex.quote(c) for c in full_cmd))
     print("\n==============================================\n")
 
-    # Run Octave
+    # Run 
     subprocess.run(full_cmd, check=True)
 
 

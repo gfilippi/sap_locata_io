@@ -70,7 +70,6 @@ function plot_results(in, results, opts, truth, is_dev)
 
 close all; clear fig_hdls;
 
-
 [srt_idx, end_idx] = regexp(in.plot_title, '[0-9]*');
 task_ID = in.plot_title(srt_idx(1):end_idx(1));
 rec_ID = in.plot_title(srt_idx(2):end_idx(2));
@@ -101,12 +100,8 @@ v = axis; v(5) = 0; axis(v)
 if is_dev 
     % plots should not be save for the submission results!
     saveas(fig_hdls(1), [in.results_dir filesep 'scene_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.fig']);
-
-    print(fig_hdls(end), fullfile(in.results_dir, sprintf('scene_%s_task%d_recording%d.png', array_ID, task_ID, rec_ID)), '-dpng', '-r300');
-
-    %set(gcf, "renderer", "painters")
-    %print(fig_hdls(end), fullfile(in.results_dir, sprintf('scene_%s_task%d_recording%d.eps', array_ID, task_ID, rec_ID)), '-depsc');
-
+    saveas(fig_hdls(1), [in.results_dir filesep 'scene_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.jpg']);
+    %saveas(fig_hdls(1), [in.results_dir filesep 'scene_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.eps']);    
 end
 
 %% Plot signal
@@ -160,12 +155,8 @@ if is_dev
         drawnow;
         
         saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.fig']);
-
-        print(fig_hdls(end), fullfile(in.results_dir, sprintf('MUSIC_%s_task%d_recording%d.png', array_ID, task_ID, rec_ID)), '-dpng', '-r300');
-
-        %set(gcf, "renderer", "painters")
-        %print(fig_hdls(end), fullfile(in.results_dir, sprintf('MUSIC_%s_task%d_recording%d.eps', array_ID, task_ID, rec_ID)), '-depsc');
-
+        saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.jpg']);
+        %saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.eps']);        
     end
 end
 
@@ -200,12 +191,8 @@ if is_dev
         drawnow;
         
         saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.fig']);
-
-        print(fig_hdls(end), fullfile(in.results_dir, sprintf('MUSIC_%s_task%d_recording%d.png', array_ID, task_ID, rec_ID)), '-dpng', '-r300');
-
-        %set(gcf, "renderer", "painters")
-        %print(fig_hdls(end), fullfile(in.results_dir, sprintf('MUSIC_%s_task%d_recording%d.eps', array_ID, task_ID, rec_ID)), '-depsc');
-
+        saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.jpg']);
+        %saveas(fig_hdls(end), [in.results_dir filesep 'MUSIC_', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '.eps']);        
     end
 end
 
@@ -224,19 +211,12 @@ view(2);
 
 if is_dev 
     % plots should not be save for the submission results!
-    saveas(fig_hdls(end), [in.results_dir filesep 'mics-', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), '_frame', num2str(frame_idx), '.fig']);
-
-    print(fig_hdls(end), fullfile(in.results_dir, sprintf('mics-%s_task%d_recording%d_frame%d.png', array_ID, task_ID, rec_ID,frame_idx)), '-dpng', '-r300');
-
-    %set(gcf, "renderer", "painters")
-    %print(fig_hdls(end), fullfile(in.results_dir, sprintf('mics-%s_task%d_recording%d_frame%d.eps', array_ID, task_ID, rec_ID,frame_idx)), '-depsc');
-
-
+    saveas(fig_hdls(end), [in.results_dir filesep 'mics-', array_ID, '_task', num2str(task_ID), '_recording', num2str(rec_ID), ...
+        '_frame', num2str(frame_idx), '.fig']);
 end
 
 
 close(fig_hdls);
 clear fig_hdls;
-
 
 end

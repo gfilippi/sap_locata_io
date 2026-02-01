@@ -65,8 +65,6 @@ function main(data_dir, results_dir, is_dev, arrays, tasks)
 % OF THE POSSIBILITY OF SUCH DAMAGES.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pkg load parallel
-
 % Add matlab directory and sub-folders to path:
 addpath(genpath('./'))
 
@@ -198,7 +196,7 @@ for task_idx = 1:length(tasks)
 
         % collect data structure for parallel processing
         for arr_idx = 1 : length(array_names)
-            p_idx+=1;
+            p_idx=p_idx+1;
             p_task_idx{p_idx}=task_idx;
             p_task_dir{p_idx}=task_dir;
             p_rec_dir{p_idx}=rec_dir;
@@ -207,7 +205,7 @@ for task_idx = 1:length(tasks)
             p_tasks{p_idx}=tasks;
             p_recordings{p_idx} = recordings;
             p_array_names{p_idx} = array_names;
-            p_results_task_dir(p_idx)=results_task_dir;
+            p_results_task_dir{p_idx}=results_task_dir;
 
         end
 
@@ -232,8 +230,8 @@ for z = 1:N
     audio_array_idx = ~cellfun(@isempty, regexp({wav_fnames.name}, 'audio_array'));
     audio_array_idx = find(audio_array_idx);
 
-    % fprintf("%s/%s %3.1f\n",wav_fnames(audio_array_idx).folder,wav_fnames(audio_array_idx).name, wav_fnames(audio_array_idx).statinfo.size/(1024*1024))
-    tmp_array{z} = [z, wav_fnames(audio_array_idx).statinfo.size/(1024*1024)];
+    % fprintf("%s/%s %3.1f\n",wav_fnames(audio_array_idx).folder,wav_fnames(audio_array_idx).name, wav_fnames(audio_array_idx).bytes/(1024*1024))
+    tmp_array{z} = [z, wav_fnames(audio_array_idx).bytes/(1024*1024)];
 end
 
 % sort indexes bases on audio recoding size
@@ -258,8 +256,8 @@ core_sum = 1;
 
 for i = 1:numel(vals)
     if and( (current_sum + vals(i) < group_size_limit), (core_sum < group_count_limit))
-        core_sum +=1;
-        current_sum += vals(i);
+        core_sum = core_sum + 1;
+        current_sum = current_sum + vals(i);
     else
         ranges{end+1} = idxs(start_idx:(i-1));
         start_idx = i;
@@ -273,50 +271,25 @@ ranges{end+1} = idxs(start_idx:numel(idxs));
 
 % execute data processing calls in parallel, re-ordered as partitioned
 for range_idx = ranges
-    nproc = length(idx);
-
     idx = range_idx{1};
     disp(['Processing indices: ', mat2str(idx)]);
 
-    %% SERIAL EXEC for debug 
-    % for z = start_idx:end_idx
-    %    data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
-    % end
+    % Start parallel pool if needed
+    if isempty(gcp('nocreate'))
+        parpool;   % or parpool(nproc)
+    end
 
     % PARALLEL EXEC
-    pararrayfun(
-        nproc, 
-        @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-        idx
-    );
+    parfor ii = 1:numel(idx)
+        z = idx(ii);
+        data_processing( ...
+            z, ...
+            p_task_idx, p_tasks, p_task_dir, p_rec_dir, ...
+            p_arr_idx, p_rec_idx, p_recordings, p_array_names, ...
+            p_results_task_dir, is_dev, my_alg_name, opts);
+    end
 
 end
-
-% nproc = 4 % tot proc/2
-% chunk_size = nproc;    % size of each chunk
-
-% sort indexes for random order
-% idx = randperm(N);
-
-% for start_idx = 1:chunk_size:N
-%     end_idx = min(start_idx+chunk_size-1, N);
-
-%     % ---- do work on this chunk ----
-%     disp(['Processing indices: ', mat2str(idx(start_idx:end_idx))]);
-
-%     %% SERIAL EXEC for debug 
-%     % for z = start_idx:end_idx
-%     %    data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
-%     % end
-
-%     % PARALLEL EXEC
-%     % pararrayfun(
-%     %     nproc, 
-%     %     @(z) data_processing(z, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts),
-%     %     idx(start_idx:end_idx)
-%     % );
-
-% end
 
 
 disp('Processing finished!')

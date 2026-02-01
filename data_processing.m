@@ -1,11 +1,3 @@
-% function [r]=data_processing(p_idx, p_arr_idx, p_recordings, p_array_names, p_results_task_dir)
-%     disp(p_idx)
-%     pause(3)
-% %     this_array = p_array_names{p_idx}{p_arr_idx{p_idx}}
-% %    array_dir = [rec_dir filesep array_names{arr_idx}];
-%     r=1;
-% end
-
 function [r]=data_processing(p_idx, p_task_idx, p_tasks, p_task_dir, p_rec_dir, p_arr_idx, p_rec_idx, p_recordings, p_array_names, p_results_task_dir, is_dev, my_alg_name, opts)
 
     task_idx = p_task_idx{p_idx};

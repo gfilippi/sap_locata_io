@@ -67,8 +67,6 @@ function out = MUSIC(idx, in, opts)
 % OF THE POSSIBILITY OF SUCH DAMAGES.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-pkg load image
-
 az = -pi:deg2rad(5):pi;           % Azimuth - note that this is denoted as el in [2]
 
 % Boresight elevation = pi/2, i.e., elevation = inclination (see comment after (8.39) in [2]:
@@ -148,7 +146,7 @@ valid_X = X(:,valid_freq_idx,:);
 fprintf("[%03d] MUSIC autocorrelation on blocks=%d \n",idx,nblocks)
 block_idx_prev = -100;
 
-t_start=time();
+t_start=posixtime(datetime('now'));
 
 power = zeros(fftPoint/2-1, length(az), length(el), nblocks);
 
@@ -174,7 +172,7 @@ for block_idx = 1 : nblocks
 
             % log progress
             if ( (100*((block_idx-block_idx_prev)/nblocks)) ) > 5
-                t_stop = time();
+                t_stop = posixtime(datetime('now'));
                 dt_ms = (t_stop - t_start); 
                 fprintf("[%03d] MUSIC autocorr compute %d/%d (%2.2f blocks/s) (az_len=%d, el_len=%d)\n",idx, block_idx, nblocks, block_idx/dt_ms, length(az), length(el) )
                 block_idx_prev = block_idx;
